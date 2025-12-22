@@ -4,7 +4,11 @@ use serial::*;
 use serial_windows::*;
 
 #[cfg(target_os = "windows")]
-pub fn read_serial(port: String) {}
+pub fn read_serial(port: String) {
+  todo!("Not Implemented");
+}
 
 #[cfg(target_os = "linux")]
-pub fn read_serial(port: String) {}
+pub fn read_serial(port: String) {
+  todo!("Not Implemented");
+}

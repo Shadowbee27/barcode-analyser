@@ -1,4 +1,6 @@
+use crate::app::Data;
 use serde::{Deserialize, Serialize};
+
 #[allow(unused)]
 #[derive(Debug, Clone, Serialize)]
 struct BookData {
@@ -34,4 +36,8 @@ struct VolumeInfo {
 struct ImageLinks {
   thumbnail: Option<String>,
   smallThumbnail: Option<String>,
+}
+
+pub async fn get_google_book_data(ean13: i32) -> Data {
+  Data::default()
 }
