@@ -14,7 +14,7 @@ fn main() -> eframe::Result {
     options,
     Box::new(|cc| {
       egui_extras::install_image_loaders(&cc.egui_ctx);
-      Ok(Box::<app::BarcodeScanner>::default())
+      Ok(Box::<app::app::BarcodeScanner>::default())
     }),
   )
 }
