@@ -71,8 +71,8 @@ impl Item {
     }
     BookData {
       title: &self.volumeInfo.title,
-      authors: authors,
-      description: description,
+      authors,
+      description,
     }
   }
 }
