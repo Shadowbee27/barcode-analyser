@@ -22,5 +22,5 @@ pub async fn get_open_food_facts_data(ean13: i32) -> Data {
       };
     }
   }
-  return result;
+  result
 }

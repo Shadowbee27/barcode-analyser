@@ -7,19 +7,10 @@ pub struct BookData<'a> {
   pub authors: Vec<String>,
   pub description: String,
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Data {
   pub has_data: bool,
   pub data: String,
-}
-
-impl Default for Data {
-  fn default() -> Self {
-    Data {
-      has_data: false,
-      data: String::new(),
-    }
-  }
 }
 
 impl<'a> std::fmt::Display for BookData<'a> {

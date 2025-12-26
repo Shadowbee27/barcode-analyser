@@ -45,11 +45,10 @@ pub async fn get_google_book_data(ean13: i32) -> Data {
     .await
     .unwrap();
 
-  let data = Data {
+  Data {
     has_data: true,
-    data: convert_to_string(&bookdata.items.first().unwrap()).await,
-  };
-  return data;
+    data: convert_to_string(bookdata.items.first().unwrap()).await,
+  }
 }
 
 async fn convert_to_string(data: &Item) -> String {
