@@ -2,8 +2,8 @@ use serde::Serialize;
 
 #[allow(unused)]
 #[derive(Debug, Clone, Serialize)]
-pub struct BookData<'a> {
-  pub title: &'a String,
+pub struct BookData {
+  pub title: String,
   pub authors: Vec<String>,
   pub description: String,
 }
@@ -13,7 +13,7 @@ pub struct Data {
   pub data: String,
 }
 
-impl<'a> std::fmt::Display for BookData<'a> {
+impl std::fmt::Display for BookData {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(
       f,

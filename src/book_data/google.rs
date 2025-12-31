@@ -1,5 +1,5 @@
 use crate::app::bookdata::{BookData, Data};
-use reqwest::Client;
+use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 
 #[allow(unused)]
@@ -30,46 +30,57 @@ struct ImageLinks {
   smallThumbnail: Option<String>,
 }
 
-pub async fn get_google_book_data(ean13: i32) -> Data {
+pub fn get_google_book_data(ean13: i64) -> Data {
   let url = format!(
     "https://www.googleapis.com/books/v1/volumes?q=isbn:{}",
     ean13,
   );
-  let cleint = Client::new();
-  let bookdata = cleint
-    .get(url)
+  let client = Client::new();
+  let result = client
+    .get(&url)
     .send()
-    .await
-    .unwrap()
-    .json::<BookRoot>()
-    .await
-    .unwrap();
+    .and_then(|resp| resp.json::<BookRoot>());
 
-  Data {
-    has_data: true,
-    data: convert_to_string(bookdata.items.first().unwrap()).await,
+  match result {
+    Ok(bookroot) => {
+      if let Some(item) = bookroot.items.first() {
+        Data {
+          has_data: true,
+          data: convert_to_string(item),
+        }
+      } else {
+        Data {
+          has_data: false,
+          data: String::new(),
+        }
+      }
+    }
+    Err(_) => Data {
+      has_data: false,
+      data: String::new(),
+    },
   }
 }
 
-async fn convert_to_string(data: &Item) -> String {
-  let mut data = data.clone();
+fn convert_to_string(data: &Item) -> String {
+  let data = data.clone();
   let bookdata = data.to_bookdata();
 
   format!("{}", bookdata)
 }
 
 impl Item {
-  pub fn to_bookdata(&mut self) -> BookData<'_> {
+  pub fn to_bookdata(self) -> BookData {
     let mut authors: Vec<String> = Vec::new();
     let mut description = String::new();
-    if let Some(se) = self.volumeInfo.authors.take() {
+    if let Some(se) = self.volumeInfo.authors {
       authors = se;
     }
-    if let Some(se) = self.volumeInfo.description.take() {
+    if let Some(se) = self.volumeInfo.description {
       description = se;
     }
     BookData {
-      title: &self.volumeInfo.title,
+      title: self.volumeInfo.title,
       authors,
       description,
     }

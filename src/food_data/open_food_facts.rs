@@ -4,7 +4,7 @@ use openfoodfacts as off;
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
-pub async fn get_open_food_facts_data(ean13: i32) -> Data {
+pub fn get_open_food_facts_data(ean13: i64) -> Data {
   let mut result = Data::default();
   let client = off::v2().build().unwrap();
   let data = client.product(ean13.to_string().as_str(), None).unwrap();
