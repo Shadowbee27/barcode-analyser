@@ -1,7 +1,9 @@
 use crate::app::bookdata::*;
+use crate::app::fooddata::*;
 use crate::app::serial_read::read_serial;
 use crate::book_data::google::get_google_book_data;
 use crate::food_data::open_food_facts::get_open_food_facts_data;
+use eframe::egui::RichText;
 use eframe::egui::{self};
 use egui::ComboBox;
 use log::info;
@@ -24,8 +26,8 @@ enum ScannerSetting {
 #[derive(Debug, Default)]
 pub struct BarcodeScanner {
   scanner_setting: ScannerSetting,
-  google_book_data: Data,
-  open_food_facts_data: Data,
+  google_book_data: GBookData,
+  open_food_facts_data: OFFData,
   new_port: String,
   pub port: String,
   pub current_barcode: i64,
@@ -47,6 +49,8 @@ impl std::fmt::Display for ScannerSetting {
   }
 }
 
+pub const UNKNOWN: &str = "Unknown";
+
 impl eframe::App for BarcodeScanner {
   fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
     egui::CentralPanel::default().show(ctx, |ui| {
@@ -59,6 +63,7 @@ impl eframe::App for BarcodeScanner {
         self.open_food_facts_data = get_open_food_facts_data(self.current_barcode);
         self.last_barcode = self.current_barcode;
       }
+
       // Display the current barcode
       ui.label(format!("Barcode: {}", &self.last_barcode.to_string()));
       if self.scanner_setting == ScannerSetting::Manual {
@@ -87,7 +92,100 @@ impl eframe::App for BarcodeScanner {
           column[1].label("Food Facts");
         } else {
           column[1].group(|ui| {
-            ui.label(&self.open_food_facts_data.data);
+            ui.heading(
+              &self
+                .open_food_facts_data
+                .product
+                .product
+                .product_name
+                .clone()
+                .unwrap_or(String::from("Some(Food)")),
+            );
+
+            ui.label(format!(
+              "Brand: {}",
+              if self.open_food_facts_data.product.product.brands.is_some() {
+                format!(
+                  "{}",
+                  &self
+                    .open_food_facts_data
+                    .product
+                    .product
+                    .brands
+                    .clone()
+                    .unwrap()
+                )
+              } else {
+                UNKNOWN.to_string()
+              },
+            ));
+
+            ui.label(format!(
+              "Country: {}",
+              &self
+                .open_food_facts_data
+                .product
+                .product
+                .countries
+                .clone()
+                .unwrap_or(UNKNOWN.to_string())
+            ));
+            ui.label(format!(
+              "Ingredients: {}",
+              &self
+                .open_food_facts_data
+                .product
+                .product
+                .ingredients_text
+                .clone()
+                .unwrap_or(UNKNOWN.to_string())
+            ));
+
+            ui.label(format!(
+              "Qunantity: {}",
+              &self
+                .open_food_facts_data
+                .product
+                .product
+                .quantity
+                .clone()
+                .unwrap_or_default()
+            ));
+
+            ui.label(format!(
+              "Food type: {}",
+              &self
+                .open_food_facts_data
+                .product
+                .product
+                .pnns_groups_1
+                .clone()
+                .unwrap_or_default()
+            ));
+
+            ui.group(|ui| {
+              ui.label(RichText::heading("Nutriments:".into()));
+              ui.label(format!(
+                "{}",
+                &self
+                  .open_food_facts_data
+                  .product
+                  .product
+                  .nutriments
+                  .clone()
+                  .unwrap_or_default()
+              ));
+              ui.label(format!(
+                "{}",
+                &self
+                  .open_food_facts_data
+                  .product
+                  .product
+                  .nutrient_levels
+                  .clone()
+                  .unwrap_or_default()
+              ))
+            });
           });
         }
       });
@@ -105,6 +203,7 @@ impl eframe::App for BarcodeScanner {
             }
           });
 
+        // Serial port setting
         if self.scanner_setting == ScannerSetting::Serial {
           ui.label("Serial Port:");
 

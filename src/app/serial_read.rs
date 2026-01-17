@@ -12,7 +12,7 @@ use serial_windows::*;
 
 #[cfg(target_os = "windows")]
 pub fn read_serial(port: String) {
-  todo!("Not Implemented");
+  unimplemented!("Not Implemented");
 }
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]

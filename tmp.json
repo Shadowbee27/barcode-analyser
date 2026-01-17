@@ -1,0 +1,23 @@
+{
+  "code": "4017100871030",
+  "product": {
+    "brands": "Bahlsen",
+    "countries": "Germany",
+    "ingredients_text": "WEIZENMEHL, Zucker, Glukose-Fruktose-Sirup, Apfelmark, Kakaobutter, Kakaomasse, MAGERMILCHPULVER, Karamellzuckersirup, Molkenerzeugnis (MILCH), BUTTERREINFETT, HÜHNERVOLLEI, gemahlene Aprikosenkerne, Palmöl, Backtriebmittel: Kaliumcarbonate, Ammoniumcarbonate; MILCHZUCKER, Zimt, Gewürze, Invertzuckersirup, Emulgator: Lecithine; Säuerungsmittel: Citronensäure; Aroma, WEIZENKLEIE. Kann enthalten: MANDELN, HASELNÜSSE, PISTAZIEN.",
+    "nutrient_levels": {
+      "fat": "moderate",
+      "salt": "low",
+      "saturated-fat": "high"
+    },
+    "nutriments": {
+      "energy_100g": 1695,
+      "energy_unit": "kcal",
+      "sugars_unit": "g",
+      "sugars_value": 41
+    },
+    "pnns_groups_1": "Sugary snacks",
+    "product_name": "Schoko Lebkuchen",
+    "quantity": "175 g"
+  },
+  "status_verbose": "product found"
+}

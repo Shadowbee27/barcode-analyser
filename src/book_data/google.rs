@@ -1,4 +1,4 @@
-use crate::app::bookdata::{BookData, Data};
+use crate::app::bookdata::{BookData, GBookData};
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 
@@ -30,7 +30,7 @@ struct ImageLinks {
   smallThumbnail: Option<String>,
 }
 
-pub fn get_google_book_data(ean13: i64) -> Data {
+pub fn get_google_book_data(ean13: i64) -> GBookData {
   let url = format!(
     "https://www.googleapis.com/books/v1/volumes?q=isbn:{}",
     ean13,
@@ -44,18 +44,18 @@ pub fn get_google_book_data(ean13: i64) -> Data {
   match result {
     Ok(bookroot) => {
       if let Some(item) = bookroot.items.first() {
-        Data {
+        GBookData {
           has_data: true,
           data: convert_to_string(item),
         }
       } else {
-        Data {
+        GBookData {
           has_data: false,
           data: String::new(),
         }
       }
     }
-    Err(_) => Data {
+    Err(_) => GBookData {
       has_data: false,
       data: String::new(),
     },

@@ -1,91 +1,55 @@
-use crate::app::bookdata::Data;
-use log::info;
+use crate::app::fooddata::*;
+use log::{debug, error, info, warn};
 use openfoodfacts as off;
-use serde::Deserialize;
-use serde::Serialize;
 
-pub fn get_open_food_facts_data(ean13: i64) -> Data {
-  let mut result: Data;
+pub fn get_open_food_facts_data(ean13: i64) -> OFFData {
+  let result: OFFData;
   let client = off::v0().build().unwrap();
+  debug!("Getting OFF data");
   let data = client
     .product(ean13.to_string().as_str(), None)
     .and_then(|resp| Ok(resp.json::<ProductRoot>().unwrap()));
-
+  debug!("Got OFF data");
   match data {
     Ok(product) => {
       if "product found" == product.status_verbose {
-        println!("{:?}", product);
-        result = Data {
+        debug!("{:?}", product);
+        info!("Got data form OFF");
+        result = OFFData {
           has_data: true,
-          data: convert_to_string(product),
+          product: product,
         };
       } else {
-        println!("Codeeeeeeeeeeeeeeeeeeeeee: {}", product.status_verbose);
-        result = Data {
+        warn!("OFF Api return code isn't a success code");
+        result = OFFData {
           has_data: false,
-          data: String::new(),
+          product: ProductRoot::default(),
         };
       }
     }
-    Err(_) => {
-      result = Data {
+    Err(e) => {
+      error!("An error happened while getting OFF data: {}", e);
+      result = OFFData {
+        // This might be changed to be an err later but I can't be bothered
         has_data: false,
-        data: String::new(),
+        product: ProductRoot::default(),
       }
     }
   };
-  //println!("{}", result_json);
-
   result
 }
 
-fn convert_to_string(product: ProductRoot) -> String {
-  let product = product.product;
-  format!(
-    "Brand: {}\n Countrie: {}\n Ingredients: {}",
-    product.brands, product.countries, product.ingredients_text
-  )
-}
-
-#[allow(unused)]
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ProductRoot {
-  code: String,
-  product: item,
-  status_verbose: String,
-}
-
-#[allow(unused, non_camel_case_types)]
-#[derive(Debug, Deserialize, Serialize)]
-struct item {
-  brands: String,
-  countries: String,
-  ingredients_text: String,
-  nutrient_levels: nutrient_levels,
-  nutriments: nutriments,
-  nutriscore_grade: String,
-  pnns_groups_1: String,
-  pnns_groups_2: String,
-  product_name: String,
-  product_type: String,
-  quantity: String,
-}
-
-#[allow(unused, non_camel_case_types)]
-#[derive(Debug, Deserialize, Serialize)]
-struct nutrient_levels {
-  fat: String,
-  salt: String,
-  #[serde(rename = "saturated-fat")]
-  saturated_fat: String,
-  sugars: String,
-}
-
-#[allow(unused, non_camel_case_types)]
-#[derive(Debug, Deserialize, Serialize)]
-struct nutriments {
-  energy_100g: i32,
-  energy_unit: String,
-  sugars_unit: String,
-  sugars_value: i32,
-}
+// fn convert_to_string(product: ProductRoot) -> String {
+//   let product = product.product;
+//   format!(
+//     "Product: {}\nBrand: {}\nCountrie: {}\nIngredients: {}\nNutriscore: {}\n Groups: {}, {}\nType: {}",
+//     product.product_name,
+//     product.brands,
+//     product.countries,
+//     product.ingredients_text,
+//     product.nutriscore_grade,
+//     product.pnns_groups_1,
+//     product.pnns_groups_2,
+//     product.product_type
+//   )
+// }

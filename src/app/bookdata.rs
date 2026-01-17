@@ -8,7 +8,7 @@ pub struct BookData {
   pub description: String,
 }
 #[derive(Debug, Clone, Default)]
-pub struct Data {
+pub struct GBookData {
   pub has_data: bool,
   pub data: String,
 }
