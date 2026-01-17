@@ -49,9 +49,4 @@ openfoodfacts = { git = "https://github.com/openfoodfacts/openfoodfacts-rust.git
 open-library = "0.7.1"
 strum_macros = "0.27.2"
 strum = "0.27.2"
-
-[target.'cfg(windows)'.dependencies]
-serial-windows = "0.4.0"
-
-[target.'cfg(unix)'.dependencies]
-serial = "0.4.0"
+serialport = "4.8.1"
