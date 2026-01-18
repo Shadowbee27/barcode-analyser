@@ -7,6 +7,7 @@ use eframe::egui::RichText;
 use eframe::egui::{self};
 use egui::ComboBox;
 use log::info;
+use serialport::SerialPortInfo;
 use std::{
   sync::mpsc::{self, RecvTimeoutError},
   thread,
@@ -48,6 +49,15 @@ impl std::fmt::Display for ScannerSetting {
     }
   }
 }
+
+// impl Default for SerialPortInfo {
+//   fn default() -> Self {
+//     SerialPortInfo {
+//       port_name: String::new(),
+//       port_type: serialport::SerialPortType::Unknown,
+//     }
+//   }
+// }
 
 pub const UNKNOWN: &str = "Unknown";
 
@@ -195,7 +205,7 @@ impl eframe::App for BarcodeScanner {
         ui.heading("Settings:");
 
         ui.label("Mode:");
-        ComboBox::from_label("")
+        ComboBox::from_label("Port")
           .selected_text(format!("{}", self.scanner_setting))
           .show_ui(ui, |ui| {
             for val in ScannerSetting::iter() {
@@ -206,9 +216,22 @@ impl eframe::App for BarcodeScanner {
         // Serial port setting
         if self.scanner_setting == ScannerSetting::Serial {
           ui.label("Serial Port:");
+          let ports = serialport::available_ports().expect("No ports found!");
 
-          let port = ui.text_edit_singleline(&mut self.new_port);
-          if !port.has_focus() && !self.new_port.is_empty() && self.new_port != self.port {
+          ComboBox::from_label("Setting")
+            .selected_text(format!("{}", self.new_port))
+            .show_ui(ui, |ui| {
+              for val in ports {
+                ui.selectable_value(
+                  &mut self.new_port,
+                  val.port_name.clone(),
+                  format!("{}", &val.port_name),
+                );
+              }
+            });
+
+          // let port = ui.text_edit_singleline(&mut self.new_port);
+          if !self.new_port.is_empty() && self.new_port != self.port {
             self.port = self.new_port.clone();
             let (tx, rx) = mpsc::channel::<i64>();
             let port_clone = self.port.clone();
