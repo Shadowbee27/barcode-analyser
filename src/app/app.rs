@@ -7,7 +7,6 @@ use eframe::egui::RichText;
 use eframe::egui::{self};
 use egui::ComboBox;
 use log::info;
-use serialport::SerialPortInfo;
 use std::{
   sync::mpsc::{self, RecvTimeoutError},
   thread,
@@ -103,7 +102,7 @@ impl eframe::App for BarcodeScanner {
         } else {
           column[1].group(|ui| {
             ui.heading(
-              &self
+              self
                 .open_food_facts_data
                 .product
                 .product
@@ -115,16 +114,14 @@ impl eframe::App for BarcodeScanner {
             ui.label(format!(
               "Brand: {}",
               if self.open_food_facts_data.product.product.brands.is_some() {
-                format!(
-                  "{}",
-                  &self
-                    .open_food_facts_data
-                    .product
-                    .product
-                    .brands
-                    .clone()
-                    .unwrap()
-                )
+                self
+                  .open_food_facts_data
+                  .product
+                  .product
+                  .brands
+                  .clone()
+                  .unwrap()
+                  .to_string()
               } else {
                 UNKNOWN.to_string()
               },
@@ -219,14 +216,10 @@ impl eframe::App for BarcodeScanner {
           let ports = serialport::available_ports().expect("No ports found!");
 
           ComboBox::from_label("Setting")
-            .selected_text(format!("{}", self.new_port))
+            .selected_text(self.new_port.to_string())
             .show_ui(ui, |ui| {
               for val in ports {
-                ui.selectable_value(
-                  &mut self.new_port,
-                  val.port_name.clone(),
-                  format!("{}", &val.port_name),
-                );
+                ui.selectable_value(&mut self.new_port, val.port_name.clone(), &val.port_name);
               }
             });
 

@@ -53,7 +53,7 @@ impl std::fmt::Display for nutriments {
     write!(
       f,
       "Sugar: {}{}\nEnergy per 100g: {} {}",
-      if !self.sugars_value.is_none() {
+      if self.sugars_value.is_some() {
         self.sugars_value.unwrap().to_string()
       } else {
         "".to_string()

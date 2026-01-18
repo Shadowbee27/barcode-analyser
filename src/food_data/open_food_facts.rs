@@ -8,7 +8,7 @@ pub fn get_open_food_facts_data(ean13: i64) -> OFFData {
   debug!("Getting OFF data");
   let data = client
     .product(ean13.to_string().as_str(), None)
-    .and_then(|resp| Ok(resp.json::<ProductRoot>().unwrap()));
+    .map(|resp| resp.json::<ProductRoot>().unwrap());
   debug!("Got OFF data");
   match data {
     Ok(product) => {
@@ -17,7 +17,7 @@ pub fn get_open_food_facts_data(ean13: i64) -> OFFData {
         info!("Got data form OFF");
         result = OFFData {
           has_data: true,
-          product: product,
+          product,
         };
       } else {
         warn!("OFF Api return code isn't a success code");
