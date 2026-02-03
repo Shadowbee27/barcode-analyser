@@ -49,15 +49,6 @@ impl std::fmt::Display for ScannerSetting {
   }
 }
 
-// impl Default for SerialPortInfo {
-//   fn default() -> Self {
-//     SerialPortInfo {
-//       port_name: String::new(),
-//       port_type: serialport::SerialPortType::Unknown,
-//     }
-//   }
-// }
-
 pub const UNKNOWN: &str = "Unknown";
 
 impl eframe::App for BarcodeScanner {
@@ -69,7 +60,9 @@ impl eframe::App for BarcodeScanner {
       if self.current_barcode != self.last_barcode {
         info!("Getting new data for barcode: {}", self.current_barcode);
         self.google_book_data = get_google_book_data(self.current_barcode);
-        self.open_food_facts_data = get_open_food_facts_data(self.current_barcode);
+        if !self.current_barcode.to_string().starts_with("978") {
+          self.open_food_facts_data = get_open_food_facts_data(self.current_barcode);
+        }
         self.last_barcode = self.current_barcode;
       }
 
@@ -106,6 +99,9 @@ impl eframe::App for BarcodeScanner {
                 .open_food_facts_data
                 .product
                 .product
+                .clone()
+                .unwrap()
+                .clone()
                 .product_name
                 .clone()
                 .unwrap_or(String::from("Some(Food)")),
@@ -113,11 +109,21 @@ impl eframe::App for BarcodeScanner {
 
             ui.label(format!(
               "Brand: {}",
-              if self.open_food_facts_data.product.product.brands.is_some() {
+              if self
+                .open_food_facts_data
+                .product
+                .product
+                .clone()
+                .unwrap()
+                .brands
+                .is_some()
+              {
                 self
                   .open_food_facts_data
                   .product
                   .product
+                  .clone()
+                  .unwrap()
                   .brands
                   .clone()
                   .unwrap()
@@ -133,6 +139,8 @@ impl eframe::App for BarcodeScanner {
                 .open_food_facts_data
                 .product
                 .product
+                .clone()
+                .unwrap()
                 .countries
                 .clone()
                 .unwrap_or(UNKNOWN.to_string())
@@ -143,6 +151,8 @@ impl eframe::App for BarcodeScanner {
                 .open_food_facts_data
                 .product
                 .product
+                .clone()
+                .unwrap()
                 .ingredients_text
                 .clone()
                 .unwrap_or(UNKNOWN.to_string())
@@ -154,6 +164,8 @@ impl eframe::App for BarcodeScanner {
                 .open_food_facts_data
                 .product
                 .product
+                .clone()
+                .unwrap()
                 .quantity
                 .clone()
                 .unwrap_or_default()
@@ -165,6 +177,8 @@ impl eframe::App for BarcodeScanner {
                 .open_food_facts_data
                 .product
                 .product
+                .clone()
+                .unwrap()
                 .pnns_groups_1
                 .clone()
                 .unwrap_or_default()
@@ -178,6 +192,8 @@ impl eframe::App for BarcodeScanner {
                   .open_food_facts_data
                   .product
                   .product
+                  .clone()
+                  .unwrap()
                   .nutriments
                   .clone()
                   .unwrap_or_default()
@@ -188,6 +204,8 @@ impl eframe::App for BarcodeScanner {
                   .open_food_facts_data
                   .product
                   .product
+                  .clone()
+                  .unwrap()
                   .nutrient_levels
                   .clone()
                   .unwrap_or_default()
@@ -202,7 +220,7 @@ impl eframe::App for BarcodeScanner {
         ui.heading("Settings:");
 
         ui.label("Mode:");
-        ComboBox::from_label("Port")
+        ComboBox::from_label(" ")
           .selected_text(format!("{}", self.scanner_setting))
           .show_ui(ui, |ui| {
             for val in ScannerSetting::iter() {
@@ -215,7 +233,7 @@ impl eframe::App for BarcodeScanner {
           ui.label("Serial Port:");
           let ports = serialport::available_ports().expect("No ports found!");
 
-          ComboBox::from_label("Setting")
+          ComboBox::from_label("")
             .selected_text(self.new_port.to_string())
             .show_ui(ui, |ui| {
               for val in ports {

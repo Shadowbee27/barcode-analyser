@@ -21,6 +21,7 @@ pub fn get_open_food_facts_data(ean13: i64) -> OFFData {
         };
       } else {
         warn!("OFF Api return code isn't a success code");
+        error!("Code is: {}", product.status_verbose);
         result = OFFData {
           has_data: false,
           product: ProductRoot::default(),
@@ -38,18 +39,3 @@ pub fn get_open_food_facts_data(ean13: i64) -> OFFData {
   };
   result
 }
-
-// fn convert_to_string(product: ProductRoot) -> String {
-//   let product = product.product;
-//   format!(
-//     "Product: {}\nBrand: {}\nCountrie: {}\nIngredients: {}\nNutriscore: {}\n Groups: {}, {}\nType: {}",
-//     product.product_name,
-//     product.brands,
-//     product.countries,
-//     product.ingredients_text,
-//     product.nutriscore_grade,
-//     product.pnns_groups_1,
-//     product.pnns_groups_2,
-//     product.product_type
-//   )
-// }

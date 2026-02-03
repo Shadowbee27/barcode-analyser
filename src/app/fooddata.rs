@@ -10,7 +10,7 @@ pub struct OFFData {
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
 pub struct ProductRoot {
   pub code: String,
-  pub product: item,
+  pub product: Option<item>,
   pub status_verbose: String,
 }
 
