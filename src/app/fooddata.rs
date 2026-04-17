@@ -1,4 +1,13 @@
 use serde::{Deserialize, Serialize};
+use strum_macros::Display;
+
+#[derive(Debug, Clone, Deserialize, Serialize, Display)]
+#[serde(untagged)]
+pub enum FloatOrInt {
+  F64(f64),
+  I32(i32),
+  String(String),
+}
 
 #[derive(Debug, Default)]
 pub struct OFFData {
@@ -44,7 +53,7 @@ pub struct nutrient_levels {
 pub struct nutriments {
   pub energy_100g: Option<i32>,
   pub energy_unit: Option<String>,
-  pub sugars_unit: Option<String>,
+  pub sugars_unit: Option<FloatOrInt>,
   pub sugars_value: Option<i32>,
 }
 
@@ -58,7 +67,10 @@ impl std::fmt::Display for nutriments {
       } else {
         "".to_string()
       },
-      self.sugars_unit.clone().unwrap_or(String::from("Unknown")),
+      self
+        .sugars_unit
+        .clone()
+        .unwrap_or(FloatOrInt::String(String::from("Unknown"))),
       self.energy_100g.unwrap_or(-1),
       self.energy_unit.clone().unwrap_or(String::from("value"))
     )
