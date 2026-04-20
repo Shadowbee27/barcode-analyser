@@ -52,8 +52,8 @@ impl std::fmt::Display for ScannerSetting {
 pub const UNKNOWN: &str = "Unknown";
 
 impl eframe::App for BarcodeScanner {
-  fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-    egui::CentralPanel::default().show(ctx, |ui| {
+  fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+    egui::CentralPanel::default().show_inside(ui, |ui| {
       ui.heading("Barcode Scanner");
 
       // Get check if we got a new Barcode and get the needed data
@@ -274,6 +274,6 @@ impl eframe::App for BarcodeScanner {
         }
       }
     });
-    ctx.request_repaint_after(Duration::from_millis(50));
+    ui.request_repaint_after(Duration::from_millis(50));
   }
 }

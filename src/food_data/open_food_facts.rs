@@ -4,7 +4,7 @@ use openfoodfacts as off;
 
 pub fn get_open_food_facts_data(ean13: i64) -> OFFData {
   let result: OFFData;
-  let client = off::v0().build().unwrap();
+  let client = off::v2().build().unwrap();
   debug!("Getting OFF data");
   let data = client.product(ean13.to_string().as_str(), None).unwrap();
   debug!("Got OFF data");

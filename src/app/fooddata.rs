@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
-use strum_macros::Display;
 
-#[derive(Debug, Clone, Deserialize, Serialize, Display)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum FloatOrInt {
   F64(f64),
@@ -51,10 +50,10 @@ pub struct nutrient_levels {
 #[allow(unused, non_camel_case_types)]
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
 pub struct nutriments {
-  pub energy_100g: Option<i32>,
+  pub energy_100g: Option<FloatOrInt>,
   pub energy_unit: Option<String>,
-  pub sugars_unit: Option<FloatOrInt>,
-  pub sugars_value: Option<i32>,
+  pub sugars_unit: Option<String>,
+  pub sugars_value: Option<FloatOrInt>,
 }
 
 impl std::fmt::Display for nutriments {
@@ -63,15 +62,12 @@ impl std::fmt::Display for nutriments {
       f,
       "Sugar: {}{}\nEnergy per 100g: {} {}",
       if self.sugars_value.is_some() {
-        self.sugars_value.unwrap().to_string()
+        self.sugars_value.clone().unwrap().to_string()
       } else {
         "".to_string()
       },
-      self
-        .sugars_unit
-        .clone()
-        .unwrap_or(FloatOrInt::String(String::from("Unknown"))),
-      self.energy_100g.unwrap_or(-1),
+      self.sugars_unit.clone().unwrap_or(String::from("Unknown")),
+      self.energy_100g.clone().unwrap_or(FloatOrInt::I32(-1)),
       self.energy_unit.clone().unwrap_or(String::from("value"))
     )
   }
@@ -89,5 +85,15 @@ impl std::fmt::Display for nutrient_levels {
         .clone()
         .unwrap_or(String::from("Unknown"))
     )
+  }
+}
+
+impl std::fmt::Display for FloatOrInt {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      FloatOrInt::F64(v) => write!(f, "{}", v),
+      FloatOrInt::I32(v) => write!(f, "{}", v),
+      FloatOrInt::String(v) => write!(f, "{}", v),
+    }
   }
 }
