@@ -7,11 +7,7 @@ use eframe::egui::RichText;
 use eframe::egui::{self};
 use egui::ComboBox;
 use log::info;
-use std::{
-  sync::mpsc::{self, RecvTimeoutError},
-  thread,
-  time::Duration,
-};
+use std::{sync::mpsc, thread, time::Duration};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -31,6 +27,8 @@ pub struct BarcodeScanner {
   new_port: String,
   pub port: String,
   pub current_barcode: i64,
+  serial_retry: i8,
+  serial_error: String,
   man_barcode: String,
   last_barcode: i64,
   serial_rx: Option<mpsc::Receiver<i64>>,
@@ -248,29 +246,45 @@ impl eframe::App for BarcodeScanner {
             let port_clone = self.port.clone();
             self.serial_rx = Some(rx);
             self.serial_handle = Some(thread::spawn(move || read_serial(port_clone, tx)));
+            self.serial_retry = 0;
           }
 
           if self.port.is_empty() {
             ui.heading("Please set a serrial Port");
           }
+
+          ui.label("");
+          if !self.serial_error.is_empty() {
+            ui.heading(format!("Error: ({})", self.serial_error));
+          }
         }
       });
 
-      // Check the recv if we got new data. If the recv is disconected we panic as this is not supose to happen
+      // Check the recv if we got new data. If the recv is disconnected we panic as this is not suppose to happen
       if self.scanner_setting == ScannerSetting::Serial && !self.port.is_empty() {
         match &self.serial_rx {
           Some(v) => match v.recv_timeout(Duration::from_millis(10)) {
             Ok(recv) => {
               self.current_barcode = recv;
+              self.serial_retry = 0;
             }
             Err(e) => {
-              if e == RecvTimeoutError::Disconnected {
+              self.port = self.new_port.clone();
+              let (tx, rx) = mpsc::channel::<i64>();
+              let port_clone = self.port.clone();
+              self.serial_rx = Some(rx);
+              self.serial_handle = Some(thread::spawn(move || read_serial(port_clone, tx)));
+              self.serial_retry += 1;
+              if self.serial_retry >= 32 {
                 self.port = String::new();
                 self.new_port = String::new();
+                self.serial_error = e.to_string();
               }
             }
           },
-          None => panic!("Serial Port is inialized but no reciver is active"),
+          None => {
+            panic!()
+          }
         }
       }
     });
