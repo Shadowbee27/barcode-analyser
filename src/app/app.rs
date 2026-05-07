@@ -247,6 +247,7 @@ impl eframe::App for BarcodeScanner {
             self.serial_rx = Some(rx);
             self.serial_handle = Some(thread::spawn(move || read_serial(port_clone, tx)));
             self.serial_retry = 0;
+            self.serial_error = String::new();
           }
 
           if self.port.is_empty() {
@@ -283,7 +284,7 @@ impl eframe::App for BarcodeScanner {
             }
           },
           None => {
-            panic!()
+            panic!("Scanner is initialized but doesn't exist");
           }
         }
       }
