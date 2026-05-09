@@ -6,7 +6,7 @@ use crate::food_data::open_food_facts::get_open_food_facts_data;
 use eframe::egui::RichText;
 use eframe::egui::{self};
 use egui::ComboBox;
-use log::info;
+use log::{error, info};
 use std::{sync::mpsc, thread, time::Duration};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -239,8 +239,7 @@ impl eframe::App for BarcodeScanner {
               }
             });
 
-          // let port = ui.text_edit_singleline(&mut self.new_port);
-          if !self.new_port.is_empty() && self.new_port != self.port {
+          if self.new_port != self.port {
             self.port = self.new_port.clone();
             let (tx, rx) = mpsc::channel::<i64>();
             let port_clone = self.port.clone();
@@ -270,13 +269,8 @@ impl eframe::App for BarcodeScanner {
               self.serial_retry = 0;
             }
             Err(e) => {
-              self.port = self.new_port.clone();
-              let (tx, rx) = mpsc::channel::<i64>();
-              let port_clone = self.port.clone();
-              self.serial_rx = Some(rx);
-              self.serial_handle = Some(thread::spawn(move || read_serial(port_clone, tx)));
-              self.serial_retry += 1;
-              if self.serial_retry >= 32 {
+              if e != mpsc::RecvTimeoutError::Timeout {
+                error!("{}", e);
                 self.port = String::new();
                 self.new_port = String::new();
                 self.serial_error = e.to_string();
