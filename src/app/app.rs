@@ -1,11 +1,8 @@
-use crate::app::bookdata::*;
-use crate::app::fooddata::*;
-use crate::app::serial_read::read_serial;
+use crate::app::{bookdata::*, fooddata::*, serial_read::read_serial};
 use crate::book_data::google::get_google_book_data;
 use crate::food_data::open_food_facts::get_open_food_facts_data;
-use eframe::egui::RichText;
 use eframe::egui::{self};
-use egui::ComboBox;
+use egui::{ComboBox, RichText, ecolor::Color32};
 use log::{error, info};
 use std::{sync::mpsc, thread, time::Duration};
 use strum::IntoEnumIterator;
@@ -37,12 +34,10 @@ pub struct BarcodeScanner {
 
 impl std::fmt::Display for ScannerSetting {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    if self == &ScannerSetting::Serial {
-      write!(f, "Serial")
-    } else if self == &ScannerSetting::Manual {
-      write!(f, "Manual")
-    } else {
-      write!(f, "NotSet")
+    match self {
+      ScannerSetting::Manual => write!(f, "Manual"),
+      ScannerSetting::NotSet => write!(f, "Unset"),
+      ScannerSetting::Serial => write!(f, "Serial"),
     }
   }
 }
@@ -92,13 +87,9 @@ impl eframe::App for BarcodeScanner {
           column[1].label("Food Facts");
         } else {
           column[1].group(|ui| {
+            let food_data = &self.open_food_facts_data.product.product.clone().unwrap();
             ui.heading(
-              self
-                .open_food_facts_data
-                .product
-                .product
-                .clone()
-                .unwrap()
+              &food_data
                 .clone()
                 .product_name
                 .clone()
@@ -107,25 +98,8 @@ impl eframe::App for BarcodeScanner {
 
             ui.label(format!(
               "Brand: {}",
-              if self
-                .open_food_facts_data
-                .product
-                .product
-                .clone()
-                .unwrap()
-                .brands
-                .is_some()
-              {
-                self
-                  .open_food_facts_data
-                  .product
-                  .product
-                  .clone()
-                  .unwrap()
-                  .brands
-                  .clone()
-                  .unwrap()
-                  .to_string()
+              if food_data.brands.is_some() {
+                food_data.brands.clone().unwrap().to_string()
               } else {
                 UNKNOWN.to_string()
               },
@@ -133,24 +107,11 @@ impl eframe::App for BarcodeScanner {
 
             ui.label(format!(
               "Country: {}",
-              &self
-                .open_food_facts_data
-                .product
-                .product
-                .clone()
-                .unwrap()
-                .countries
-                .clone()
-                .unwrap_or(UNKNOWN.to_string())
+              &food_data.countries.clone().unwrap_or(UNKNOWN.to_string())
             ));
             ui.label(format!(
               "Ingredients: {}",
-              &self
-                .open_food_facts_data
-                .product
-                .product
-                .clone()
-                .unwrap()
+              &food_data
                 .ingredients_text
                 .clone()
                 .unwrap_or(UNKNOWN.to_string())
@@ -158,55 +119,23 @@ impl eframe::App for BarcodeScanner {
 
             ui.label(format!(
               "Qunantity: {}",
-              &self
-                .open_food_facts_data
-                .product
-                .product
-                .clone()
-                .unwrap()
-                .quantity
-                .clone()
-                .unwrap_or_default()
+              &food_data.quantity.clone().unwrap_or_default()
             ));
 
             ui.label(format!(
               "Food type: {}",
-              &self
-                .open_food_facts_data
-                .product
-                .product
-                .clone()
-                .unwrap()
-                .pnns_groups_1
-                .clone()
-                .unwrap_or_default()
+              &food_data.pnns_groups_1.clone().unwrap_or_default()
             ));
 
             ui.group(|ui| {
               ui.label(RichText::heading("Nutriments:".into()));
               ui.label(format!(
                 "{}",
-                &self
-                  .open_food_facts_data
-                  .product
-                  .product
-                  .clone()
-                  .unwrap()
-                  .nutriments
-                  .clone()
-                  .unwrap_or_default()
+                &food_data.nutriments.clone().unwrap_or_default()
               ));
               ui.label(format!(
                 "{}",
-                &self
-                  .open_food_facts_data
-                  .product
-                  .product
-                  .clone()
-                  .unwrap()
-                  .nutrient_levels
-                  .clone()
-                  .unwrap_or_default()
+                &food_data.nutrient_levels.clone().unwrap_or_default()
               ))
             });
           });
@@ -250,12 +179,19 @@ impl eframe::App for BarcodeScanner {
           }
 
           if self.port.is_empty() {
-            ui.heading("Please set a serrial Port");
+            //ui.heading("Please set a serrial Port");
+            ui.label(RichText::color(
+              RichText::heading("Please set a serial port".into()),
+              Color32::from_rgb(255, 165, 10),
+            ));
           }
 
           ui.label("");
           if !self.serial_error.is_empty() {
-            ui.heading(format!("Error: ({})", self.serial_error));
+            ui.label(RichText::color(
+              RichText::heading(format!("Error: ({})", self.serial_error).into()),
+              Color32::from_rgb(255, 20, 20),
+            ));
           }
         }
       });

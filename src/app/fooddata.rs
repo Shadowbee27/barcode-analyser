@@ -77,7 +77,7 @@ impl std::fmt::Display for nutrient_levels {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(
       f,
-      "Fat leves: {}\nSalt levels: {}\nSaturated fat levels: {}",
+      "Fat levels: {}\nSalt levels: {}\nSaturated fat levels: {}",
       self.fat.clone().unwrap_or(String::from("Unknown")),
       self.salt.clone().unwrap_or(String::from("Unknown")),
       self

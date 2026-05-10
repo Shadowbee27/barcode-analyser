@@ -29,12 +29,10 @@ struct ImageLinks {
   thumbnail: Option<String>,
   smallThumbnail: Option<String>,
 }
+const GOOGLE_API: &str = "https://www.googleapis.com/books/v1/volumes?q=isbn:";
 
 pub fn get_google_book_data(ean13: i64) -> GBookData {
-  let url = format!(
-    "https://www.googleapis.com/books/v1/volumes?q=isbn:{}",
-    ean13,
-  );
+  let url = format!("{}{}", GOOGLE_API, ean13);
   let client = Client::new();
   let result = client
     .get(&url)
