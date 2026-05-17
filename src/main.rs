@@ -1,20 +1,25 @@
 pub mod app;
 pub mod book_data;
 pub mod food_data;
-use eframe::*;
+use gpui::*;
+use gpui_component::*;
 
-fn main() -> eframe::Result {
-  env_logger::init();
-  let options = eframe::NativeOptions {
-    viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 880.0]),
-    ..Default::default()
-  };
-  eframe::run_native(
-    "Barcode Scanner",
-    options,
-    Box::new(|cc| {
-      egui_extras::install_image_loaders(&cc.egui_ctx);
-      Ok(Box::<app::app::BarcodeScanner>::default())
-    }),
-  )
+fn main() {
+  let app = Application::new();
+
+  app.run(move |cx| {
+    // This must be called before using any GPUI Component features.
+    gpui_component::init(cx);
+
+    cx.spawn(async move |cx| {
+      cx.open_window(WindowOptions::default(), |window, cx| {
+        let view = cx.new(|_| app::app::BarcodeScanner::default());
+        // This first level on the window, should be a Root.
+        cx.new(|cx| Root::new(view, window, cx))
+      })?;
+
+      Ok::<_, anyhow::Error>(())
+    })
+    .detach();
+  });
 }

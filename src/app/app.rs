@@ -1,8 +1,8 @@
 use crate::app::{bookdata::*, fooddata::*, serial_read::read_serial};
 use crate::book_data::google::get_google_book_data;
 use crate::food_data::open_food_facts::get_open_food_facts_data;
-use eframe::egui::{self};
-use egui::{ComboBox, RichText, ecolor::Color32};
+use gpui::*;
+use gpui_component::{button::*, *};
 use log::{error, info};
 use std::{sync::mpsc, thread, time::Duration};
 use strum::IntoEnumIterator;
@@ -44,181 +44,20 @@ impl std::fmt::Display for ScannerSetting {
 
 pub const UNKNOWN: &str = "Unknown";
 
-impl eframe::App for BarcodeScanner {
-  fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-    egui::CentralPanel::default().show_inside(ui, |ui| {
-      ui.heading("Barcode Scanner");
-
-      // Get check if we got a new Barcode and get the needed data
-      if self.current_barcode != self.last_barcode {
-        info!("Getting new data for barcode: {}", self.current_barcode);
-        self.google_book_data = get_google_book_data(self.current_barcode);
-        if !self.current_barcode.to_string().starts_with("978") {
-          self.open_food_facts_data = get_open_food_facts_data(self.current_barcode);
-        }
-        self.last_barcode = self.current_barcode;
-      }
-
-      // Display the current barcode
-      ui.label(format!("Barcode: {}", &self.last_barcode.to_string()));
-      if self.scanner_setting == ScannerSetting::Manual {
-        let man_barcode_field = ui.text_edit_singleline(&mut self.man_barcode);
-        if !man_barcode_field.has_focus()
-          && !self.man_barcode.is_empty()
-          && self.current_barcode.to_string() != self.man_barcode
-        {
-          self.current_barcode = self.man_barcode.trim().parse::<i64>().unwrap();
-        }
-      }
-
-      // Columns for data sources
-      ui.columns(2, |column| {
-        // If we have data from Google display it
-        if !self.google_book_data.has_data {
-          column[0].label("Google Book Api");
-        } else {
-          column[0].group(|ui| {
-            ui.label(&self.google_book_data.data);
-          });
-        }
-
-        // If we have data from OFF display it
-        if !self.open_food_facts_data.has_data {
-          column[1].label("Food Facts");
-        } else {
-          column[1].group(|ui| {
-            let food_data = &self.open_food_facts_data.product.product.clone().unwrap();
-            ui.heading(
-              &food_data
-                .clone()
-                .product_name
-                .clone()
-                .unwrap_or(String::from("Some(Food)")),
-            );
-
-            ui.label(format!(
-              "Brand: {}",
-              if food_data.brands.is_some() {
-                food_data.brands.clone().unwrap().to_string()
-              } else {
-                UNKNOWN.to_string()
-              },
-            ));
-
-            ui.label(format!(
-              "Country: {}",
-              &food_data.countries.clone().unwrap_or(UNKNOWN.to_string())
-            ));
-            ui.label(format!(
-              "Ingredients: {}",
-              &food_data
-                .ingredients_text
-                .clone()
-                .unwrap_or(UNKNOWN.to_string())
-            ));
-
-            ui.label(format!(
-              "Qunantity: {}",
-              &food_data.quantity.clone().unwrap_or_default()
-            ));
-
-            ui.label(format!(
-              "Food type: {}",
-              &food_data.pnns_groups_1.clone().unwrap_or_default()
-            ));
-
-            ui.group(|ui| {
-              ui.label(RichText::heading("Nutriments:".into()));
-              ui.label(format!(
-                "{}",
-                &food_data.nutriments.clone().unwrap_or_default()
-              ));
-              ui.label(format!(
-                "{}",
-                &food_data.nutrient_levels.clone().unwrap_or_default()
-              ))
-            });
-          });
-        }
-      });
-
-      // settings group
-      ui.group(|ui| {
-        ui.heading("Settings:");
-
-        ui.label("Mode:");
-        ComboBox::from_label(" ")
-          .selected_text(format!("{}", self.scanner_setting))
-          .show_ui(ui, |ui| {
-            for val in ScannerSetting::iter() {
-              ui.selectable_value(&mut self.scanner_setting, val.clone(), format!("{}", &val));
-            }
-          });
-
-        // Serial port setting
-        if self.scanner_setting == ScannerSetting::Serial {
-          ui.label("Serial Port:");
-          let ports = serialport::available_ports().expect("No ports found!");
-
-          ComboBox::from_label("")
-            .selected_text(self.new_port.to_string())
-            .show_ui(ui, |ui| {
-              for val in ports {
-                ui.selectable_value(&mut self.new_port, val.port_name.clone(), &val.port_name);
-              }
-            });
-
-          if self.new_port != self.port {
-            self.port = self.new_port.clone();
-            let (tx, rx) = mpsc::channel::<i64>();
-            let port_clone = self.port.clone();
-            self.serial_rx = Some(rx);
-            self.serial_handle = Some(thread::spawn(move || read_serial(port_clone, tx)));
-            self.serial_retry = 0;
-            self.serial_error = String::new();
-          }
-
-          if self.port.is_empty() {
-            //ui.heading("Please set a serrial Port");
-            ui.label(RichText::color(
-              RichText::heading("Please set a serial port".into()),
-              Color32::from_rgb(255, 165, 10),
-            ));
-          }
-
-          ui.label("");
-          if !self.serial_error.is_empty() {
-            ui.label(RichText::color(
-              RichText::heading(format!("Error: ({})", self.serial_error).into()),
-              Color32::from_rgb(255, 20, 20),
-            ));
-          }
-        }
-      });
-
-      // Check the recv if we got new data. If the recv is disconnected we panic as this is not suppose to happen
-      if self.scanner_setting == ScannerSetting::Serial && !self.port.is_empty() {
-        match &self.serial_rx {
-          Some(v) => match v.recv_timeout(Duration::from_millis(10)) {
-            Ok(recv) => {
-              self.current_barcode = recv;
-              self.serial_retry = 0;
-            }
-            Err(e) => {
-              if e != mpsc::RecvTimeoutError::Timeout {
-                error!("{}", e);
-                self.port = String::new();
-                self.new_port = String::new();
-                self.serial_error = e.to_string();
-              }
-            }
-          },
-          None => {
-            panic!("Scanner is initialized but doesn't exist");
-          }
-        }
-      }
-    });
-    ui.request_repaint_after(Duration::from_millis(50));
+impl Render for BarcodeScanner {
+  fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    div()
+      .v_flex()
+      .gap_2()
+      .size_full()
+      .items_center()
+      .justify_center()
+      .child("Hello, World!")
+      .child(
+        Button::new("ok")
+          .primary()
+          .label("Let's Go!")
+          .on_click(|_, _, _| println!("Clicked!")),
+      )
   }
 }
